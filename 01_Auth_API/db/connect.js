@@ -16,7 +16,7 @@ const dbCheck = async () => {
     ]);
     console.log(res.rows[0].message);
   } catch (error) {
-    console.log(error);
+    throw error;
   } finally {
     client.end();
   }
