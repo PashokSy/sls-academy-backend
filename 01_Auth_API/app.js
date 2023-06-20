@@ -6,6 +6,10 @@ const app = express();
 // postgres connect
 const dbCheck = require('./db/connect');
 
+// routers
+const authRouter = require('./routes/authRoutes');
+const userRouter = require('./routes/userRoutes');
+
 // middleware
 app.use(express.json());
 
@@ -13,6 +17,8 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.send('<h1>01_Auth_API</h1>');
 });
+app.use('/auth', authRouter);
+app.use('', userRouter);
 
 // server
 const port = process.env.PORT || 3000;
