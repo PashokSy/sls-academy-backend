@@ -3,8 +3,8 @@ require('express-async-errors');
 const express = require('express');
 const app = express();
 
-// postgres connect
-const dbCheck = require('./db/connect');
+// postgres connect check
+const dbConnectionCheck = require('./db/connect');
 
 // routers
 const authRouter = require('./routes/authRoutes');
@@ -25,7 +25,7 @@ const port = process.env.PORT || 3000;
 
 const start = async () => {
   try {
-    await dbCheck();
+    await dbConnectionCheck();
     app.listen(port, () =>
       console.log(`Server is listening on port ${port}...`)
     );
