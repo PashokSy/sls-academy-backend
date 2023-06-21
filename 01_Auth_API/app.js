@@ -4,11 +4,15 @@ const express = require('express');
 const app = express();
 
 // postgres connect check
-const dbConnectionCheck = require('./db/connect');
+const { dbConnectionCheck } = require('./db/connect');
 
 // routers
 const authRouter = require('./routes/authRoutes');
 const userRouter = require('./routes/userRoutes');
+
+// error handlers
+const notFoundMiddleware = require('./middleware/notFound');
+const errorHandlerMiddleware = require('./middleware/errorHandler');
 
 // middleware
 app.use(express.json());
@@ -19,6 +23,9 @@ app.get('/', (req, res) => {
 });
 app.use('/auth', authRouter);
 app.use('', userRouter);
+
+app.use(notFoundMiddleware);
+app.use(errorHandlerMiddleware);
 
 // server
 const port = process.env.PORT || 3000;
