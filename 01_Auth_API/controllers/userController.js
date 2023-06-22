@@ -1,12 +1,9 @@
 const { pool } = require('../db/connect');
-const bcrypt = require('bcrypt');
 
 const getCurrentUser = async (req, res) => {
-  try {
-    res.status(200).json({ message: 'getCurrentUser' });
-  } catch (error) {
-    console.log(error);
-  }
+  res
+    .status(200)
+    .json({ success: true, data: { id: req.user.id, email: req.user.email } });
 };
 
 module.exports = {

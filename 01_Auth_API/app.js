@@ -16,16 +16,18 @@ const errorHandlerMiddleware = require('./middleware/errorHandler');
 
 // middleware
 app.use(express.json());
+// authentication
+const authenticateToken = require('./middleware/authorization');
 
 // routes
 app.get('/', (req, res) => {
   res.send('<h1>01_Auth_API</h1>');
 });
 app.use('/auth', authRouter);
-app.use('', userRouter);
+app.use('', authenticateToken, userRouter);
 
 app.use(notFoundMiddleware);
-app.use(errorHandlerMiddleware);
+//app.use(errorHandlerMiddleware);
 
 // server
 const port = process.env.PORT || 3000;
