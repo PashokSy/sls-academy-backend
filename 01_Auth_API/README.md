@@ -10,6 +10,10 @@ In order to spin up the project, in the root folder create .env with these varia
 - PG_PORT (postgres data base port db is running on)
 - PG_DB_NAME (postgres data base name)
 
+- ACCESS_TOKEN_SECRET (your 256 bit secret)
+- REFRESH_TOKEN_SECRET (your 256 bit secret, preferably different from ACCESS_TOKEN_SECRET)
+- ACCESS_TOKEN_TTL (Time before access token expires)
+
 After that run this command
 
 ```bash
