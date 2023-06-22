@@ -27,7 +27,7 @@ app.use('/auth', authRouter);
 app.use('', authenticateToken, userRouter);
 
 app.use(notFoundMiddleware);
-//app.use(errorHandlerMiddleware);
+app.use(errorHandlerMiddleware);
 
 // server
 const port = process.env.PORT || 3000;
