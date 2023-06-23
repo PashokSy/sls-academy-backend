@@ -1,7 +1,12 @@
 require('dotenv').config();
-const { pool } = require('../db/connect');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const {
+  generateTokens,
+  validEmail,
+  userFindOneByEmail,
+  userInsert,
+  userDeleteById,
+} = require('../utils');
 const {
   NotFoundError,
   ConflictError,
@@ -17,42 +22,30 @@ const signIn = async (req, res) => {
     throw new BadRequestError('Please provide email and password');
   }
   // user not registered
-  const user = await pool.query(
-    'SELECT user_id, user_email, user_password FROM users WHERE user_email = $1',
-    [email]
-  );
-  if (user.rows.length === 0) {
+  const user = await userFindOneByEmail(email);
+  if (!user) {
     throw new NotFoundError(`User ${email} not found`);
   }
   // password don't match
-  const validPassword = await bcrypt.compare(
-    password,
-    user.rows[0].user_password
-  );
+  const validPassword = await bcrypt.compare(password, user.user_password);
   if (!validPassword) {
     throw new ForbiddenError(`Password incorrect`);
   }
 
-  // generate access token
-  const accessToken = jwt.sign(
-    { id: user.rows[0].user_id, email: user.rows[0].user_email },
-    process.env.TOKEN_SECRET,
-    {
-      expiresIn: process.env.ACCESS_TOKEN_TTL,
-    }
-  );
-  // get refresh token
-  const getRefreshToken = await pool.query(
-    'SELECT refresh_token FROM tokens WHERE user_id = $1',
-    [user.rows[0].user_id]
-  );
+  // generate tokens
+  let jwTokens;
+  try {
+    jwTokens = generateTokens(user);
+  } catch (error) {
+    // error handler will processes error and send 500 to client
+  }
 
   res.status(200).json({
     success: true,
     data: {
-      id: user.rows[0].user_id,
-      accessToken: accessToken,
-      refreshToken: getRefreshToken.rows[0].refresh_token,
+      id: user.user_id,
+      accessToken: jwTokens.accessToken,
+      refreshToken: jwTokens.refreshToken,
     },
   });
 };
@@ -65,21 +58,12 @@ const signUp = async (req, res) => {
     throw new BadRequestError('Please provide email and password');
   }
   // email validation
-  if (
-    !String(email)
-      .toLowerCase()
-      .match(
-        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-      )
-  ) {
+  if (!validEmail(email)) {
     throw new BadRequestError('Please provide valid email');
   }
   // email not unique
-  const user = await pool.query(
-    'SELECT user_email FROM users WHERE user_email = $1',
-    [email]
-  );
-  if (user.rows.length != 0) {
+  const user = await userFindOneByEmail(email);
+  if (user) {
     throw new ConflictError(`User with email ${email} already exists`);
   }
 
@@ -88,45 +72,25 @@ const signUp = async (req, res) => {
   // create new user in database
   let newUser;
   try {
-    newUser = await pool.query(
-      'INSERT INTO users (user_email, user_password) VALUES ($1, $2) RETURNING *',
-      [email, hashedPassword]
-    );
+    newUser = await userInsert({ email, hashedPassword });
   } catch (error) {
-    throw new ConflictError('Failed to create new user');
+    throw new ConflictError('Unable to create new user');
   }
   // generate tokens
-  const accessToken = jwt.sign(
-    { id: newUser.rows[0].user_id, email: newUser.rows[0].user_email },
-    process.env.TOKEN_SECRET,
-    {
-      expiresIn: process.env.ACCESS_TOKEN_TTL,
-    }
-  );
-  const refreshToken = jwt.sign(
-    { id: newUser.rows[0].user_id, email: newUser.rows[0].user_email },
-    process.env.TOKEN_SECRET
-  );
-  // insert token to database
+  let jwTokens;
   try {
-    await pool.query(
-      'INSERT INTO tokens(refresh_token, user_id) VALUES ($1, $2)',
-      [refreshToken, newUser.rows[0].user_id]
-    );
+    jwTokens = generateTokens(newUser);
   } catch (error) {
-    // token insertion failed
-    await pool.query('DELETE FROM users WHERE user_id = $1', [
-      newUser.rows[0].user_id,
-    ]);
-    throw new ConflictError('Failed to create new user');
+    userDeleteById(newUser.user_id);
+    throw new ConflictError('Unable to create new user');
   }
 
   res.status(201).json({
     success: true,
     data: {
-      id: newUser.rows[0].user_id,
-      accessToken: accessToken,
-      refreshToken: refreshToken,
+      id: newUser.user_id,
+      accessToken: jwTokens.accessToken,
+      refreshToken: jwTokens.refreshToken,
     },
   });
 };
