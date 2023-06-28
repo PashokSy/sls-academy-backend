@@ -9,3 +9,7 @@ In order to spin up the project, in the root folder create .env with these varia
 - PG_HOST (postgres data base host link)
 - PG_PORT (postgres data base port db is running on)
 - PG_DB_NAME (postgres data base name)
+
+## Database Setup
+
+SQL queries contain in file named "tabelsQuerry.sql" in root folder. Execute queries in your database to create tables needed.
