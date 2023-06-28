@@ -1,7 +1,17 @@
 const { jsonCreateUpdate, jsonFindOne } = require('../utils/queryHelper');
+const {
+  UnsupportedMediaType,
+  ConflictError,
+  NotFoundError,
+  ForbiddenError,
+} = require('../errors');
 
 const putJson = async (req, res) => {
   let json;
+
+  if (!req.is('application/json')) {
+    throw new UnsupportedMediaType('Provided Media Type Is Unsupported');
+  }
 
   try {
     json = await jsonCreateUpdate(
@@ -10,8 +20,10 @@ const putJson = async (req, res) => {
       req.body
     );
   } catch (error) {
-    res.status(500).send(error.message);
+    throw error;
   }
+
+  if (!json) throw new ConflictError('Data Could Not Be Created');
 
   res.status(200).send(JSON.parse(json.json_data));
 };
@@ -19,11 +31,17 @@ const putJson = async (req, res) => {
 const getJson = async (req, res) => {
   let json;
 
+  if (req.get('content-type')) {
+    throw new ForbiddenError('The request could not be satisfied');
+  }
+
   try {
     json = await jsonFindOne(req.params.pileName, req.params.jsonName);
   } catch (error) {
-    res.status(500).send(error.message);
+    throw error;
   }
+
+  if (!json) throw new NotFoundError('Data Not Found');
 
   res.status(200).send(JSON.parse(json.json_data));
 };
