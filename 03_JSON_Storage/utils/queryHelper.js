@@ -1,46 +1,112 @@
 const { pool } = require('../db/connect');
 
-const putJsonDB = async (pileName, jsonName, jsonData) => {
-  let result;
+/**
+ * This function will create new json
+ * if it does not already exists
+ * or update json data on one with jsonName
+ * @param {string} pileName
+ * @param {string} jsonName
+ * @param {string} jsonData
+ * @returns {Promise<Object>} json
+ */
+async function jsonCreateUpdate(pileName, jsonName, jsonData) {
+  let jsonResult;
 
   try {
-    let pile = await pool.query(
-      'SELECT pile_id FROM piles WHERE pile_name = $1',
-      [pileName]
-    );
-    // if pile does not exists
-    if (!pile.rows[0]) {
-      pile = await pool.query(
-        'INSERT INTO piles(pile_name) VALUES ($1) RETURNING pile_id',
-        [pileName]
-      );
+    let pile = await pileFindOne(pileName);
+    if (!pile) {
+      pile = await pileCreate(pileName);
     }
-    const pileId = pile.rows[0].pile_id;
 
-    let newJson = await pool.query(
-      'SELECT json_id FROM jsons WHERE json_name = $1',
-      [jsonName]
-    );
-    // if json name does not exists
-    if (!newJson.rows[0]) {
-      newJson = await pool.query(
-        'INSERT INTO jsons(pile_id, json_name, json_data) VALUES ($1, $2, $3) RETURNING json_data',
-        [pileId, jsonName, jsonData]
+    let json = await jsonFindOne(pileName, jsonName);
+    if (!json) {
+      json = await pool.query(
+        'INSERT INTO jsons(pile_id, json_name, json_data) VALUES ($1, $2, $3) RETURNING *',
+        [pile.pile_id, jsonName, jsonData]
       );
     } else {
-      newJson = await pool.query(
-        'UPDATE jsons SET json_data = $1 WHERE json_id = $2 RETURNING json_data',
-        [jsonData, newJson.rows[0].json_id]
+      json = await pool.query(
+        'UPDATE jsons SET json_data = $1 WHERE json_id = $2 AND pile_id = $3 RETURNING *',
+        [jsonData, json.json_id, pile.pile_id]
       );
     }
 
-    result = await newJson.rows[0].json_data;
-    result = JSON.parse(result);
+    jsonResult = json.rows[0];
   } catch (error) {
     throw error;
   }
 
-  return result;
-};
+  return jsonResult;
+}
 
-module.exports = { putJsonDB };
+/**
+ * This function will try to select json data from
+ * database and return it
+ * @param {string} pileName
+ * @param {string} jsonName
+ * @returns {Promise<Object>} json
+ */
+async function jsonFindOne(pileName, jsonName) {
+  let jsonResult;
+
+  try {
+    const pile = await pileFindOne(pileName);
+    const json = await pool.query(
+      'SELECT * FROM jsons WHERE json_name = $1 AND pile_id = $2',
+      [jsonName, pile.pile_id]
+    );
+
+    jsonResult = json.rows[0];
+  } catch (error) {
+    throw error;
+  }
+
+  return jsonResult;
+}
+
+/**
+ * This function will try to select pile id from database
+ * if exists and return its uuid
+ * @param {string} pileName The name of the pile user put
+ * @returns {Promise<Object>} pile
+ */
+async function pileFindOne(pileName) {
+  let pileResult;
+
+  try {
+    const pile = await pool.query('SELECT * FROM piles WHERE pile_name = $1', [
+      pileName,
+    ]);
+    if (pile.rows[0]) {
+      pileResult = pile.rows[0];
+    }
+  } catch (error) {
+    throw error;
+  }
+
+  return pileResult;
+}
+
+/**
+ * This function will create a new pile in database
+ * and return its uuid
+ * @param {string} pileName
+ * @returns {Promise<Object>} pile
+ */
+async function pileCreate(pileName) {
+  let pileResult;
+
+  try {
+    const pile = await pool.query(
+      'INSERT INTO piles(pile_name) VALUES ($1) RETURNING *',
+      [pileName]
+    );
+    pileResult = pile.rows[0];
+  } catch (error) {
+    throw error;
+  }
+
+  return pileResult;
+}
+
+module.exports = { jsonCreateUpdate, jsonFindOne };

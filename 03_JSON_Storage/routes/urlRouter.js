@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-const { putJson } = require('../controllers/urlController');
+const { putJson, getJson } = require('../controllers/urlController');
 
-router.route('/:pileName/:jsonName').put(putJson);
+router.route('/:pileName/:jsonName').put(putJson).get(getJson);
 
 module.exports = router;
