@@ -1,13 +1,15 @@
 const { pool } = require('../db/connect');
 
+const { NotFoundError } = require('../errors');
+
 /**
  * This function will create new json
- * if it does not already exists
- * or update json data on one with jsonName
+ * if it does not already exists or update
+ * json data on one with jsonName and pileName
  * @param {string} pileName
  * @param {string} jsonName
  * @param {string} jsonData
- * @returns {Promise<Object>} json
+ * @returns {Promise<Object>}
  */
 async function jsonCreateUpdate(pileName, jsonName, jsonData) {
   let jsonResult;
@@ -41,22 +43,24 @@ async function jsonCreateUpdate(pileName, jsonName, jsonData) {
 
 /**
  * This function will try to select json data from
- * database and return it
+ * database and return it or undefined
  * @param {string} pileName
  * @param {string} jsonName
- * @returns {Promise<Object>} json
+ * @returns {Promise<Object>|undefined}
  */
 async function jsonFindOne(pileName, jsonName) {
   let jsonResult;
 
   try {
     const pile = await pileFindOne(pileName);
-    const json = await pool.query(
-      'SELECT * FROM jsons WHERE json_name = $1 AND pile_id = $2',
-      [jsonName, pile.pile_id]
-    );
+    if (pile) {
+      const json = await pool.query(
+        'SELECT * FROM jsons WHERE json_name = $1 AND pile_id = $2',
+        [jsonName, pile.pile_id]
+      );
 
-    jsonResult = json.rows[0];
+      jsonResult = json.rows[0];
+    }
   } catch (error) {
     throw error;
   }
@@ -66,9 +70,9 @@ async function jsonFindOne(pileName, jsonName) {
 
 /**
  * This function will try to select pile id from database
- * if exists and return its uuid
+ * if exists and return its uuid or undefined
  * @param {string} pileName The name of the pile user put
- * @returns {Promise<Object>} pile
+ * @returns {Promise<Object>|undefined}
  */
 async function pileFindOne(pileName) {
   let pileResult;
@@ -91,7 +95,7 @@ async function pileFindOne(pileName) {
  * This function will create a new pile in database
  * and return its uuid
  * @param {string} pileName
- * @returns {Promise<Object>} pile
+ * @returns {Promise<Object>}
  */
 async function pileCreate(pileName) {
   let pileResult;
