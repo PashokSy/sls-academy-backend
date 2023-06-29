@@ -10,8 +10,10 @@
   "author": "Pavlo Syzonenko <pavlo.syzonenko@gmail.com>",
   "license": "ISC",
   "dependencies": {
+    "crypto": "^1.0.1",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "express-async-errors": "^3.1.1",
     "mongoose": "^7.3.1"
   },
   "devDependencies": {
