@@ -1,10 +1,10 @@
 const CustomError = require('./customError');
 
-class UnsupportedMediaType extends CustomError {
+class UnsupportedMediaTypeError extends CustomError {
   constructor(message) {
     super(message);
     this.statusCode = 415;
   }
 }
 
-module.exports = UnsupportedMediaType;
+module.exports = UnsupportedMediaTypeError;

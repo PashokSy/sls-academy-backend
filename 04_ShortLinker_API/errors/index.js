@@ -2,7 +2,7 @@ const CustomError = require('./customError');
 const NotFoundError = require('./notFoundError');
 const BadRequestError = require('./badRequestError');
 const ConflictError = require('./conflictError');
-const UnsupportedMediaType = require('./unsupportedMediaError');
+const UnsupportedMediaTypeError = require('./unsupportedMediaError');
 const ForbiddenError = require('./forbiddenError');
 
 module.exports = {
@@ -10,6 +10,6 @@ module.exports = {
   NotFoundError,
   BadRequestError,
   ConflictError,
-  UnsupportedMediaType,
+  UnsupportedMediaTypeError,
   ForbiddenError,
 };
