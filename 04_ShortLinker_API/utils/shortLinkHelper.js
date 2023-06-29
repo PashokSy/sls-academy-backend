@@ -119,6 +119,12 @@ async function createUrls(longUrl, shortUrlAlias, aliasProvided) {
   return urls;
 }
 
+/**
+ * This function will check if provided alias valid
+ * and throw error if not.
+ * @param {any} alias
+ * @returns {Promise<boolean>} true if valid, false if undefined
+ */
 async function aliasValidation(alias) {
   try {
     // alias not in input json
