@@ -1,6 +1,10 @@
 const Urls = require('../models/urls');
-const shortLinkSaver = require('../utils/shortLinkHelper');
-const { UnsupportedMediaTypeError, ConflictError } = require('../errors');
+const { shortLinkSaver, getLongUrl } = require('../utils/shortLinkHelper');
+const {
+  UnsupportedMediaTypeError,
+  ConflictError,
+  ForbiddenError,
+} = require('../errors');
 
 const postLongLink = async (req, res) => {
   if (!req.is('application/json')) {
@@ -21,4 +25,17 @@ const postLongLink = async (req, res) => {
   }
 };
 
-module.exports = { postLongLink };
+const getUrl = async (req, res) => {
+  if (req.get('content-type')) {
+    throw new ForbiddenError('The request could not be satisfied');
+  }
+
+  try {
+    const url = await getLongUrl(req.params.shortUrl);
+    res.redirect(url);
+  } catch (error) {
+    throw error;
+  }
+};
+
+module.exports = { postLongLink, getUrl };

@@ -3,7 +3,23 @@ const URL = require('url').URL;
 
 const Urls = require('../models/urls');
 
-const { BadRequestError, ForbiddenError } = require('../errors');
+const { BadRequestError, ForbiddenError, NotFoundError } = require('../errors');
+
+/**
+ *
+ * @param {string} shortUrlAlias
+ * @returns
+ */
+async function getLongUrl(shortUrlAlias) {
+  try {
+    const foundUrls = await Urls.findOne({
+      shortUrlAlias: shortUrlAlias,
+    });
+    return foundUrls.longUrl;
+  } catch (error) {
+    throw new NotFoundError('Alias Not Found');
+  }
+}
 
 /**
  * This function will save long link and generated or provided short link alias
@@ -167,4 +183,4 @@ function linkValidation(longUrl) {
   }
 }
 
-module.exports = shortLinkSaver;
+module.exports = { shortLinkSaver, getLongUrl };
